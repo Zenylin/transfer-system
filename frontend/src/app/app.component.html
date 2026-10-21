@@ -1,0 +1,92 @@
+@if (!showShell()) {
+  <router-outlet></router-outlet>
+} @else {
+  <div class="layout-wrapper" [class.nav-open]="navOpen">
+    <div class="sidebar-backdrop" (click)="closeNav()" aria-hidden="true"></div>
+
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-brand">
+        <h2>NTMS</h2>
+        <button type="button" class="sidebar-close" (click)="closeNav()" aria-label="關閉選單">✕</button>
+      </div>
+
+      <nav class="sidebar-nav">
+        @if (auth.can('transfers.view')) {
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeNav()">
+            <span class="icon">📋</span> 轉診清單總表
+          </a>
+        }
+        @if (auth.can('users.manage') || auth.can('stats.view')) {
+          <a routerLink="/admin" routerLinkActive="active" (click)="closeNav()">
+            <span class="icon">⚙</span> 後台管理
+          </a>
+        }
+
+        @if (activeCase(); as c) {
+          <div class="case-panel">
+            <div class="case-panel-head">
+              <p class="case-label">目前轉診紀錄</p>
+              <button type="button" class="case-clear" (click)="clearCase()">關閉</button>
+            </div>
+            <p class="case-serial">{{ c.serial }}</p>
+            <p class="case-hospital">{{ c.hospitalName || '（未填院所）' }}</p>
+            <p class="case-sub">
+              {{ c.callDate }} {{ c.callTime }}
+              ·
+              {{ casesApi.isTransferred(c.noTransferReason) ? '有外接' : '未外接' }}
+            </p>
+
+            <p class="case-forms-title">此筆表單</p>
+            @for (link of formLinks(); track link.path) {
+              <a [routerLink]="link.path" routerLinkActive="active" (click)="closeNav()" class="case-form-link">
+                <span class="code">{{ link.code }}</span>
+                <span>{{ link.label }}</span>
+              </a>
+            }
+          </div>
+        } @else {
+          <p class="sidebar-hint">點總表某一筆後，這裡會展開該筆的五張表單。</p>
+        }
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="top-header">
+        <div class="header-left">
+          <button type="button" class="menu-toggle" (click)="toggleNav()" aria-label="開啟選單" [attr.aria-expanded]="navOpen">
+            <span class="menu-bar"></span>
+            <span class="menu-bar"></span>
+            <span class="menu-bar"></span>
+          </button>
+          <div class="search-container">
+            <input type="search" placeholder="搜尋請用總表查詢列…" enterkeyhint="search" readonly />
+          </div>
+        </div>
+        <div class="header-status" aria-live="polite">
+          <span class="status-pill" [class.offline]="!network.online()" [class.online]="network.online()">
+            {{ network.online() ? '線上' : '離線' }}
+          </span>
+          <span class="status-pill pending" *ngIf="syncQueue.pendingCount() > 0">
+            待同步 {{ syncQueue.pendingCount() }}
+          </span>
+          <span class="status-pill syncing" *ngIf="syncQueue.isSyncing()">同步中…</span>
+          <button type="button" class="status-action" *ngIf="syncQueue.failedCount() > 0" (click)="retrySync()">
+            失敗重試 {{ syncQueue.failedCount() }}
+          </button>
+          <button type="button" class="status-action" *ngIf="network.online() && syncQueue.pendingCount() > 0 && !syncQueue.isSyncing()" (click)="flushSync()">
+            立即同步
+          </button>
+        </div>
+        <div class="user-profile">
+          <span class="user-label">{{ auth.user()?.name || 'User' }}</span>
+          <span class="user-role">({{ auth.user()?.roleLabel || auth.user()?.role }})</span>
+          <button type="button" class="logout-btn" (click)="logout()">登出</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </div>
+}

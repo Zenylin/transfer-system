@@ -1,0 +1,478 @@
+<div class="case-form-page" [class.printing]="printing">
+  <div class="page-head no-print">
+    <div>
+      <h1>新生兒疾病暨案母孕產史</h1>
+      <p class="meta">{{ serial }}　{{ hospital }}</p>
+    </div>
+    <a [routerLink]="['/cases', caseId, 'registry']">← 外接紀錄表</a>
+  </div>
+
+  @if (printing) {
+    <app-print-report
+      title="新生兒疾病暨案母孕產史（統計報告）"
+      [meta]="'序號 ' + serial + '　' + hospital + '　列印時間 ' + printAt"
+      [sections]="printSections"
+    ></app-print-report>
+  }
+
+  <form class="no-print" [formGroup]="form" (ngSubmit)="save()">
+    <section>
+      <h2>一、（一）孕產史</h2>
+      <div class="grid cols-3">
+        <label class="field">出生日期<input type="date" formControlName="birthDate" [max]="todayMax" /></label>
+        <label class="field">出生時間（24小時制）
+          <app-time-24h formControlName="birthTime"></app-time-24h>
+        </label>
+        <label class="field">出生體重(g)<input type="number" formControlName="birthWeightG" [min]="NUM.birthWeightG.min" [max]="NUM.birthWeightG.max" [step]="NUM.birthWeightG.step" /></label>
+        <label class="field">妊娠週數<input type="number" formControlName="gaWeeks" [min]="NUM.gaWeeks.min" [max]="NUM.gaWeeks.max" [step]="NUM.gaWeeks.step" /></label>
+        <label class="field">又＿天<input type="number" formControlName="gaDays" [min]="NUM.gaDays.min" [max]="NUM.gaDays.max" [step]="NUM.gaDays.step" /></label>
+        <label class="field">預產期 EDC<input type="date" formControlName="edc" /></label>
+      </div>
+      <div class="apgar-row" style="margin-top:10px">
+        <label class="field">Apgar 1'
+          <select formControlName="apgar1"><option [ngValue]="null">—</option>@for (n of apgarOpts; track n){<option [ngValue]="n">{{n}}</option>}</select>
+        </label>
+        <label class="field">5'
+          <select formControlName="apgar5"><option [ngValue]="null">—</option>@for (n of apgarOpts; track n){<option [ngValue]="n">{{n}}</option>}</select>
+        </label>
+        <label class="field">10'
+          <select formControlName="apgar10"><option [ngValue]="null">—</option>@for (n of apgarOpts; track n){<option [ngValue]="n">{{n}}</option>}</select>
+        </label>
+        <label class="field">15'
+          <select formControlName="apgar15"><option [ngValue]="null">—</option>@for (n of apgarOpts; track n){<option [ngValue]="n">{{n}}</option>}</select>
+        </label>
+        <label class="field">20'
+          <select formControlName="apgar20"><option [ngValue]="null">—</option>@for (n of apgarOpts; track n){<option [ngValue]="n">{{n}}</option>}</select>
+        </label>
+      </div>
+      <p class="note">Apgar 10' 起：若 &lt; 7 請續填 15'／20'</p>
+
+      <div class="grid cols-4 gp-row" style="margin-top:12px">
+        <div class="gp-cell">
+          <label class="field">G
+            <select formControlName="G">
+              <option value="">—</option>
+              @for (n of gpOpts; track n) { <option [value]="n">{{ n }}</option> }
+            </select>
+          </label>
+          @if (form.controls.G.value === '其他') {
+            <label class="field gp-other">數值（5–10）
+              <input type="number" formControlName="GOther" [min]="NUM.gpOther.min" [max]="NUM.gpOther.max" [step]="NUM.gpOther.step" />
+            </label>
+          }
+        </div>
+        <div class="gp-cell">
+          <label class="field">P
+            <select formControlName="P">
+              <option value="">—</option>
+              @for (n of gpOpts; track n) { <option [value]="n">{{ n }}</option> }
+            </select>
+          </label>
+          @if (form.controls.P.value === '其他') {
+            <label class="field gp-other">數值（5–10）
+              <input type="number" formControlName="POther" [min]="NUM.gpOther.min" [max]="NUM.gpOther.max" [step]="NUM.gpOther.step" />
+            </label>
+          }
+        </div>
+        <div class="gp-cell">
+          <label class="field">AA
+            <select formControlName="AA">
+              <option value="">—</option>
+              @for (n of gpOpts; track n) { <option [value]="n">{{ n }}</option> }
+            </select>
+          </label>
+          @if (form.controls.AA.value === '其他') {
+            <label class="field gp-other">數值（5–10）
+              <input type="number" formControlName="AAOther" [min]="NUM.gpOther.min" [max]="NUM.gpOther.max" [step]="NUM.gpOther.step" />
+            </label>
+          }
+        </div>
+        <div class="gp-cell">
+          <label class="field">SA
+            <select formControlName="SA">
+              <option value="">—</option>
+              @for (n of gpOpts; track n) { <option [value]="n">{{ n }}</option> }
+            </select>
+          </label>
+          @if (form.controls.SA.value === '其他') {
+            <label class="field gp-other">數值（5–10）
+              <input type="number" formControlName="SAOther" [min]="NUM.gpOther.min" [max]="NUM.gpOther.max" [step]="NUM.gpOther.step" />
+            </label>
+          }
+        </div>
+      </div>
+
+      <div class="option-row" style="margin-top:4px">
+        <span class="option-label">生產方式</span>
+        <div class="option-choices">
+          <label><input type="radio" formControlName="deliveryMode" value="NSD" /> NSD</label>
+          <label><input type="radio" formControlName="deliveryMode" value="CS" /> C/S</label>
+          <label><input type="checkbox" formControlName="vacuum" /> 真空吸引</label>
+          <label><input type="checkbox" formControlName="forceps" /> 產鉗</label>
+        </div>
+      </div>
+
+      <div class="option-row" style="margin-top:12px">
+        <span class="option-label">破水</span>
+        <div class="option-choices">
+          <label><input type="radio" name="promHas" [checked]="form.controls.promHas.value === 'yes'" (change)="setPromHas('yes')" /> 有</label>
+          <label><input type="radio" name="promHas" [checked]="form.controls.promHas.value === 'no'" (change)="setPromHas('no')" /> 無</label>
+        </div>
+      </div>
+      @if (isPromYes()) {
+        <div class="grid" style="margin-bottom:10px">
+          <label class="field">破水日期
+            <input type="date" formControlName="promDate" [max]="todayMax" />
+          </label>
+          <label class="field">破水時間（24小時制）
+            <app-time-24h formControlName="promTime"></app-time-24h>
+          </label>
+        </div>
+      }
+
+      <div class="option-row">
+        <span class="option-label">羊水</span>
+        <div class="option-choices">
+          @for (a of ['正常','過多','過少']; track a) {
+            <label><input type="radio" formControlName="amniotic" [value]="a" /> {{ a }}</label>
+          }
+          <label><input type="checkbox" formControlName="amnioticOdor" /> 異味</label>
+        </div>
+      </div>
+      <div class="option-row">
+        <span class="option-label">發燒／TOCC</span>
+        <div class="option-choices">
+          <label><input type="checkbox" formControlName="fever" /> 發燒</label>
+          <label><input type="checkbox" formControlName="toccChecked" /> TOCC（必勾）</label>
+        </div>
+      </div>
+      <label class="field" style="margin-top:4px">TOCC 內容<input type="text" formControlName="toccText" /></label>
+
+      <p class="note" style="margin-top:12px">生產時狀況與處置（可複選）</p>
+      <div class="checks">
+        @for (r of ['無','給氧','PPV','插管','Bosmin from ETT','Bosmin from IV/UV','CPR','其他']; track r) {
+          <label>
+            <input type="checkbox" [checked]="hasMulti('resusc', r)" (change)="toggleMulti('resusc', r, $any($event.target).checked)" />
+            {{ r }}
+          </label>
+        }
+        <input type="text" formControlName="resuscOther" placeholder="其他說明" />
+      </div>
+      <div class="option-row" style="margin-top:12px">
+        <span class="option-label">胎便染色</span>
+        <div class="option-choices">
+          @for (m of ['1+','2+','3+','4+']; track m) {
+            <label><input type="radio" formControlName="meconium" [value]="m" /> {{ m }}</label>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>一、（二）產檢</h2>
+      <label class="checks"><input type="checkbox" formControlName="noPrenatalCare" /> 無產檢（勾選後以下可免填）</label>
+      <div class="grid cols-3" style="margin-top:10px">
+        <label class="field">HBsAg
+          <select formControlName="hbsag">
+            <option value="">—</option>
+            <option value="+">(+)</option>
+            <option value="-">(-)</option>
+            <option value="tested-unknown">已驗未知</option>
+            <option value="untested-unknown">未驗未知</option>
+          </select>
+        </label>
+        <label class="field">HBeAg
+          <select formControlName="hbeag">
+            <option value="">—</option>
+            <option value="+">(+)</option>
+            <option value="-">(-)</option>
+            <option value="tested-unknown">已驗未知</option>
+            <option value="untested-unknown">未驗未知</option>
+          </select>
+        </label>
+        <label class="field">GBS
+          <select formControlName="gbs">
+            <option value="">—</option>
+            <option value="+">(+)</option>
+            <option value="-">(-)</option>
+            <option value="tested-unknown">已驗未知</option>
+            <option value="untested-unknown">未驗未知</option>
+          </select>
+        </label>
+        <label class="field">GDM
+          <select formControlName="gdm">
+            <option value="">—</option>
+            <option value="none">無</option>
+            <option value="unknown">未知</option>
+            <option value="diet">飲食控制</option>
+            <option value="oral">口服藥物</option>
+            <option value="insulin">胰島素</option>
+          </select>
+        </label>
+        <label class="field">PIH
+          <select formControlName="pih">
+            <option value="">—</option>
+            <option value="none">無</option>
+            <option value="unknown">未知</option>
+            <option value="diet">飲食控制</option>
+            <option value="drug">藥物控制</option>
+          </select>
+        </label>
+        <label class="field">HIV
+          <select formControlName="hiv">
+            <option value="">—</option>
+            <option value="none">無</option>
+            <option value="unknown">未知</option>
+            <option value="+">(+)</option>
+            <option value="-">(-)</option>
+          </select>
+        </label>
+        <label class="field">HIV 治療（若 +）
+          <select formControlName="hivTreated">
+            <option value="">—</option>
+            <option value="yes">有治療</option>
+            <option value="no">無治療</option>
+          </select>
+        </label>
+        <label class="field">RPR
+          <select formControlName="rpr">
+            <option value="">—</option>
+            <option value="none">無</option>
+            <option value="unknown">未知</option>
+            <option value="+">(+)</option>
+            <option value="-">(-)</option>
+          </select>
+        </label>
+        <label class="field">RPR 治療（若 +）
+          <select formControlName="rprTreated">
+            <option value="">—</option>
+            <option value="yes">有治療</option>
+            <option value="no">無治療</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>一、（三）產前用藥</h2>
+      <label class="checks"><input type="checkbox" formControlName="noAnteMeds" /> 無用藥</label>
+      <div class="grid" style="margin-top:10px">
+        <label class="field">betamethasone 劑量
+          <select formControlName="betaDose">
+            <option value="">—</option>
+            @for (n of [1,2,3,4,'其他']; track n) { <option [value]="n">{{ n }}</option> }
+          </select>
+        </label>
+        <label class="field">使用日期<input type="date" formControlName="betaDate" [max]="todayMax" /></label>
+        <label class="field">dexamethasone 劑量
+          <select formControlName="dexaDose">
+            <option value="">—</option>
+            @for (n of [1,2,3,4,'其他']; track n) { <option [value]="n">{{ n }}</option> }
+          </select>
+        </label>
+        <label class="field">使用日期<input type="date" formControlName="dexaDate" [max]="todayMax" /></label>
+        <label class="field">抗生素
+          <select formControlName="anteAbx">
+            <option value="">—</option>
+            <option>Penicillin G</option>
+            <option>Ampicillin</option>
+            <option>Cefazolin</option>
+            <option>Clindamycin</option>
+            <option>其他</option>
+          </select>
+        </label>
+        <label class="field">其他
+          <input type="text" formControlName="anteAbxOther" placeholder="抗生素其他說明" />
+        </label>
+        <label class="field">日期
+          <input type="date" formControlName="anteAbxDate" [max]="todayMax" />
+        </label>
+        <label class="field">MgSO4 劑量
+          <select formControlName="mgso4Dose">
+            <option value="">—</option>
+            @for (n of [1,2,3,4,'其他']; track n) { <option [value]="n">{{ n }}</option> }
+          </select>
+        </label>
+        <label class="field">使用日期<input type="date" formControlName="mgso4Date" [max]="todayMax" /></label>
+      </div>
+    </section>
+
+    <section>
+      <h2>二、（一）過去病史</h2>
+      <label class="checks"><input type="checkbox" formControlName="noPastHx" /> 無</label>
+      <div class="checks" style="margin-top:8px">
+        @for (p of ['SLE','甲狀腺功能亢進','甲狀腺功能低下','地中海型貧血','G6PD','DM','HTN','其他']; track p) {
+          <label>
+            <input type="checkbox" [checked]="hasMulti('pastHx', p)" (change)="toggleMulti('pastHx', p, $any($event.target).checked)" />
+            {{ p }}
+          </label>
+        }
+      </div>
+      <div class="grid" style="margin-top:10px">
+        <label class="field">其他說明<input type="text" formControlName="pastHxOther" /></label>
+        <label class="field">用藥<input type="text" formControlName="pastHxMeds" /></label>
+      </div>
+    </section>
+
+    <section>
+      <h2>二、（二）呼吸系統</h2>
+      <label class="checks"><input type="checkbox" formControlName="noRespProblem" /> 無呼吸問題（ROOM AIR）</label>
+      <div class="checks" style="margin-top:8px">
+        @for (s of ['血氧不穩','胸肋凹','鼻翼搧動','呼吸陣喘','呻吟聲']; track s) {
+          <label>
+            <input type="checkbox" [checked]="hasMulti('respSymptoms', s)" (change)="toggleMulti('respSymptoms', s, $any($event.target).checked)" />
+            {{ s }}
+          </label>
+        }
+      </div>
+      <div class="pair-grid" style="margin-top:10px">
+        <label class="field">O2 Hood L/min（35–60／5）
+          <input type="number" formControlName="o2HoodLpm" [min]="NUM.o2HoodLpm.min" [max]="NUM.o2HoodLpm.max" [step]="NUM.o2HoodLpm.step" />
+        </label>
+        <label class="field">O2 Cannula L/min（1–10）
+          <input type="number" formControlName="o2CannulaLpm" [min]="NUM.o2CannulaLpm.min" [max]="NUM.o2CannulaLpm.max" [step]="NUM.o2CannulaLpm.step" />
+        </label>
+        <label class="field">N-CPAP FiO2 %（21–60）
+          <input type="number" formControlName="ncpapFio2" [min]="NUM.ncpapFio2.min" [max]="NUM.ncpapFio2.max" [step]="NUM.ncpapFio2.step" />
+        </label>
+        <label class="field">N-CPAP PEEP（5–10）
+          <input type="number" formControlName="ncpapPeep" [min]="NUM.ncpapPeep.min" [max]="NUM.ncpapPeep.max" [step]="NUM.ncpapPeep.step" />
+        </label>
+        <label class="field">NIMV Rate（20–50）
+          <input type="number" formControlName="nimvRate" [min]="NUM.nimvRate.min" [max]="NUM.nimvRate.max" [step]="NUM.nimvRate.step" />
+        </label>
+        <label class="field">NIMV FiO2 %（21–60）
+          <input type="number" formControlName="nimvFio2" [min]="NUM.nimvFio2.min" [max]="NUM.nimvFio2.max" [step]="NUM.nimvFio2.step" />
+        </label>
+        <label class="field">IMV Rate（20–50）
+          <input type="number" formControlName="imvRate" [min]="NUM.imvRate.min" [max]="NUM.imvRate.max" [step]="NUM.imvRate.step" />
+        </label>
+        <label class="field">IMV FiO2 %（21–100）
+          <input type="number" formControlName="imvFio2" [min]="NUM.imvFio2.min" [max]="NUM.imvFio2.max" [step]="NUM.imvFio2.step" />
+        </label>
+        <label class="field">氣管內管號
+          <select formControlName="ettSize">
+            <option value="">—</option>
+            @for (s of ['2.0','2.5','3.0','3.5','4.0']; track s) { <option [value]="s">{{ s }}</option> }
+          </select>
+        </label>
+        <label class="field">固定公分
+          <input type="number" formControlName="ettFixCm" [min]="NUM.ettFixCm.min" [max]="NUM.ettFixCm.max" [step]="NUM.ettFixCm.step" />
+        </label>
+        <label class="field span-2">備註<textarea formControlName="respNote" [attr.maxlength]="LEN.note"></textarea></label>
+      </div>
+    </section>
+
+    <section>
+      <h2>二、（三）腸胃系統</h2>
+      <div class="option-row">
+        <span class="option-label">NPO</span>
+        <div class="option-choices">
+          <label><input type="checkbox" formControlName="npo" /> 是</label>
+        </div>
+      </div>
+      <div class="pair-grid" style="margin-top:10px">
+        <label class="field">每餐 ml（1–300）
+          <input type="number" formControlName="feedMl" [min]="NUM.feedMl.min" [max]="NUM.feedMl.max" [step]="NUM.feedMl.step" />
+        </label>
+        <label class="field">每＿小時（1–8）
+          <input type="number" formControlName="feedEveryHr" [min]="NUM.feedEveryHr.min" [max]="NUM.feedEveryHr.max" [step]="NUM.feedEveryHr.step" />
+        </label>
+        <label class="field">血糖
+          <select formControlName="glucoseMode">
+            <option value="">—</option>
+            <option value="none">無測量</option>
+            <option value="value">有數值</option>
+          </select>
+        </label>
+        <label class="field">血糖數值（0–500）
+          <input type="number" formControlName="glucoseValue" [min]="NUM.glucose.min" [max]="NUM.glucose.max" [step]="NUM.glucose.step" />
+        </label>
+        <label class="field span-2">處置
+          <input type="text" formControlName="glucoseAction" [attr.maxlength]="LEN.glucoseAction" />
+        </label>
+        <div class="field">
+          <span>胃管</span>
+          <div class="option-choices" style="min-height:42px">
+            <label><input type="checkbox" formControlName="ogTube" /> 有</label>
+          </div>
+        </div>
+        <label class="field">胃管號
+          <select formControlName="ogSize">
+            <option value="">—</option>
+            <option>5</option><option>6</option><option>8</option>
+          </select>
+        </label>
+        <label class="field">黑點前公分（1–8）
+          <input type="number" formControlName="ogCm" [min]="NUM.ogCm.min" [max]="NUM.ogCm.max" [step]="NUM.ogCm.step" />
+        </label>
+        <label class="field span-2">備註
+          <textarea formControlName="giNote" [attr.maxlength]="LEN.note"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>二、（四）靜脈輸注／抽血及用藥</h2>
+      <div class="grid cols-3">
+        <label class="field">IV pump 台數
+          <select formControlName="ivPumpCount">
+            @for (n of [0,1,2,3,4,5]; track n) { <option [ngValue]="n">{{ n }}</option> }
+          </select>
+        </label>
+        <label class="field">輸液種類<input type="text" formControlName="ivFluidType" [attr.maxlength]="LEN.shortText" /></label>
+        <label class="field">速率 ml/hr（0–30／0.1）
+          <input type="number" formControlName="ivRateMlHr" [min]="NUM.ivRateMlHr.min" [max]="NUM.ivRateMlHr.max" [step]="NUM.ivRateMlHr.step" />
+        </label>
+        <label class="field">抽血檢查
+          <select formControlName="labs">
+            <option value="">—</option>
+            <option value="yes">有</option>
+            <option value="no">無</option>
+            <option value="doc">外院附文件</option>
+          </select>
+        </label>
+        <label class="field span-2">抽血數值<input type="text" formControlName="labsValue" [attr.maxlength]="LEN.labsValue" /></label>
+        <label class="field">K1
+          <select formControlName="vitK">
+            <option value="">—</option>
+            <option value="yes">已給予</option>
+            <option value="no">未給予</option>
+          </select>
+        </label>
+        <label class="field">眼藥
+          <select formControlName="eyeDrop">
+            <option value="">—</option>
+            <option value="yes">已給予</option>
+            <option value="no">未給予</option>
+          </select>
+        </label>
+        <label class="field">使用藥物
+          <select formControlName="otherDrugs">
+            <option value="">—</option>
+            <option value="yes">有</option>
+            <option value="no">無</option>
+          </select>
+        </label>
+        <label class="field span-all">藥物種類<input type="text" formControlName="otherDrugsType" [attr.maxlength]="LEN.drugs" /></label>
+      </div>
+      <p class="note" style="margin-top:10px">抗生素（可複選）</p>
+      <div class="checks">
+        @for (a of ['Ampicillin','Gentamycin','Metronidazole','Fortum','claforan','vancomycin','Amikacin','其他']; track a) {
+          <label>
+            <input type="checkbox" [checked]="hasMulti('antibiotics', a)" (change)="toggleMulti('antibiotics', a, $any($event.target).checked)" />
+            {{ a }}
+          </label>
+        }
+        <input type="text" formControlName="abxOther" placeholder="其他" />
+      </div>
+    </section>
+
+    <p class="note" *ngIf="savedMsg">{{ savedMsg }}</p>
+    <div class="actions">
+      <button type="submit" class="primary">暫存</button>
+      <button type="button" class="primary" (click)="previewPrint()">預覽列印</button>
+      <button type="button" class="primary" (click)="next()">前往醫師轉診紀錄單</button>
+    </div>
+  </form>
+</div>

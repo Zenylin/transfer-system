@@ -1,0 +1,47 @@
+<div class="case-form-page">
+  <div class="page-head">
+    <div>
+      <h1>交班單</h1>
+      <p class="meta">{{ serial }}　{{ hospital }}</p>
+    </div>
+    <a [routerLink]="['/cases', caseId, 'nurse']">← 護理師單</a>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <section>
+      <h2>五、（四）救護車時間個案交接狀況</h2>
+      <div class="grid">
+        <label class="field">返院出發時間
+          <app-datetime-24h formControlName="returnDepartAt" [max]="nowMax"></app-datetime-24h>
+        </label>
+        <label class="field">返院回到長庚病房時間
+          <app-time-24h formControlName="returnArriveWardAt"></app-time-24h>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>入院後生命徵象</h2>
+      <div class="grid cols-3">
+        <label class="field">BT 種類
+          <select formControlName="admitBtType">
+            <option value="">—</option>
+            <option value="肛溫">肛溫</option>
+            <option value="腋溫">腋溫</option>
+          </select>
+        </label>
+        <label class="field">BT ℃<input type="number" formControlName="admitBt" [min]="NUM.bt.min" [max]="NUM.bt.max" [step]="NUM.bt.step" /></label>
+        <label class="field">HR 次/分<input type="number" formControlName="admitHr" [min]="NUM.hr.min" [max]="NUM.hr.max" [step]="NUM.hr.step" /></label>
+        <label class="field">RR 次/分<input type="number" formControlName="admitRr" [min]="NUM.rr.min" [max]="NUM.rr.max" [step]="NUM.rr.step" /></label>
+        <label class="field">SpO2 %<input type="number" formControlName="admitSpo2" [min]="NUM.spo2.min" [max]="NUM.spo2.max" [step]="NUM.spo2.step" /></label>
+        <label class="field">BP mmHg<input type="text" formControlName="admitBp" placeholder="例 65/40" maxlength="7" /></label>
+      </div>
+    </section>
+
+    <p class="note" *ngIf="savedMsg">{{ savedMsg }}</p>
+    <div class="actions">
+      <button type="submit" class="primary">暫存交班單</button>
+      <a routerLink="/" style="display:inline-flex;align-items:center;text-decoration:none;border:1px solid #cbd5e1;border-radius:12px;padding:0 18px;min-height:46px;font-weight:700;color:#334155;background:#fff">回總表</a>
+    </div>
+  </form>
+</div>

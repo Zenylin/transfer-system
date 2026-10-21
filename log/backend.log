@@ -1,0 +1,18 @@
+
+> medical-backend@1.0.0 start
+> node server.js
+
+◇ injected env (7) from .env // tip: ⌘ suppress logs { quiet: true }
+🚀 HTTPS Server running on port 3000
+[STT] {
+  provider: 'auto',
+  groq: true,
+  gemini: true,
+  groqModel: 'whisper-large-v3-turbo',
+  geminiModel: 'gemini-1.5-flash',
+  storage: 'memory',
+  medicalPrompt: true,
+  corrections: 21
+}
+[Mongo URI] mongodb://127.0.0.1:27017/CC_DB
+✅ MongoDB Connected → 127.0.0.1/CC_DB

@@ -1,0 +1,17 @@
+NTMS 整包（給 qatm.qoca.net 對外機，與 172 無關）
+
+內容重點：
+- frontend/dist/frontend/browser  = 已 production build
+- frontend/scripts/gateway.mjs
+- backend/（請自行 npm install --production，並設定 .env）
+- scripts/start_medical.sh 或 ~/start_medical.sh 同源腳本
+
+建議在目標機：
+1. 解壓到例如 /opt/medical-system 或 ~/medical-system
+2. cd backend && npm install --production
+3. 設定 backend/.env（可參考 .env.FROM_DEV… 或自行填 MONGO_URI / GROQ_API_KEY）
+4. 確認 mongod、ffmpeg、node 可用
+5. ./scripts/start_medical.sh prod --no-build
+6. nginx 反代 127.0.0.1:8091 → https://qatm.qoca.net
+
+固定網址目標：https://qatm.qoca.net/transfer/

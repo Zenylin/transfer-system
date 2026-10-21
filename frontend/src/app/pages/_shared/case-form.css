@@ -1,0 +1,468 @@
+.case-form-page {
+  max-width: 920px;
+  margin: 0 auto;
+  font-family: "Noto Sans TC", "Source Sans 3", sans-serif;
+  color: #0f172a;
+}
+
+.case-form-page .page-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #1e3a5f;
+}
+
+.case-form-page .page-head h1 {
+  margin: 0;
+  font-size: 1.45rem;
+  color: #1e3a5f;
+}
+
+.case-form-page .page-head .meta {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.case-form-page .chip {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.case-form-page .chip.ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.case-form-page .chip.warn {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.case-form-page form section {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.case-form-page form section h2 {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  color: #1e3a5f;
+}
+
+.case-form-page .grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.case-form-page .grid.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.case-form-page .grid.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.case-form-page .apgar-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.case-form-page .pair-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.case-form-page .pair-grid .span-2 {
+  grid-column: span 2;
+}
+
+.case-form-page .gi-from-history input:disabled,
+.case-form-page .gi-from-history select:disabled,
+.case-form-page .gi-from-history textarea:disabled {
+  background: #f1f5f9;
+  color: #475569;
+  cursor: not-allowed;
+}
+
+.case-form-page .time-24h {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.case-form-page .time-24h select {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* G/P/AA/SA：選其他時在同欄下方展開，不打亂四欄對齊 */
+.case-form-page .gp-row {
+  align-items: start;
+}
+
+.case-form-page .gp-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.case-form-page .gp-other {
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.case-form-page .apgar-row .field {
+  font-size: 0.78rem;
+}
+
+.case-form-page .apgar-row select {
+  min-height: 38px;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .case-form-page .apgar-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.case-form-page .span-2 {
+  grid-column: span 2;
+}
+
+.case-form-page .span-all {
+  grid-column: 1 / -1;
+}
+
+.case-form-page label.field,
+.case-form-page .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+  min-width: 0;
+}
+
+.case-form-page input[type="text"],
+.case-form-page input[type="number"],
+.case-form-page input[type="date"],
+.case-form-page input[type="time"],
+.case-form-page input[type="datetime-local"],
+.case-form-page select,
+.case-form-page textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #0f172a;
+  background: #fff;
+}
+
+.case-form-page textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* 保留數字欄上下鍵；各欄 min/max/step 見 number-limits.ts */
+.case-form-page input[type="number"]::-webkit-outer-spin-button,
+.case-form-page input[type="number"]::-webkit-inner-spin-button {
+  opacity: 1;
+}
+
+.case-form-page .checks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.case-form-page .checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+}
+
+/* 標籤 + 選項同一列對齊 */
+.case-form-page .option-row {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 8px;
+  min-height: 42px;
+  margin-bottom: 10px;
+}
+
+.case-form-page .option-row.sub-options {
+  padding: 10px 12px;
+  margin-left: 0;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.case-form-page .option-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+  line-height: 1.3;
+}
+
+.case-form-page .option-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.case-form-page .option-choices label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .case-form-page .option-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.case-form-page .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.case-form-page .actions button {
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.case-form-page .actions button.primary {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
+}
+
+.case-form-page .note {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0 0 10px;
+}
+
+.case-form-page table.eval {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.case-form-page table.eval th,
+.case-form-page table.eval td {
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  text-align: center;
+}
+
+.case-form-page table.eval input {
+  width: 100%;
+  min-height: 36px;
+}
+
+/* 轉接過程評估表（對齊紙本） */
+.case-form-page .eval-wrap {
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+}
+
+.case-form-page table.eval-sheet {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  background: #fff;
+}
+
+.case-form-page table.eval-sheet th,
+.case-form-page table.eval-sheet td {
+  border: 1px solid #94a3b8;
+  padding: 4px 6px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.case-form-page table.eval-sheet .col-item {
+  min-width: 88px;
+  text-align: left;
+  font-weight: 700;
+  background: #f8fafc;
+}
+
+.case-form-page table.eval-sheet .col-score {
+  min-width: 72px;
+  max-width: 96px;
+}
+
+.case-form-page table.eval-sheet td.crit {
+  font-weight: 500;
+  color: #334155;
+  background: #fcfcfd;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.case-form-page table.eval-sheet .col-slot {
+  min-width: 76px;
+}
+
+.case-form-page table.eval-sheet .slot-time {
+  min-width: 0;
+}
+
+.case-form-page table.eval-sheet .slot-time app-time-24h {
+  display: block;
+  width: 100%;
+}
+
+.case-form-page table.eval-sheet .col-slot select,
+.case-form-page table.eval-sheet .col-slot input[type="text"] {
+  width: 100%;
+  min-height: 32px;
+  padding: 2px 4px;
+  font-size: 0.78rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.case-form-page table.eval-sheet tr.total-row td {
+  font-weight: 800;
+  background: #eff6ff;
+}
+
+.case-form-page table.eval-sheet td.total {
+  font-size: 0.95rem;
+}
+
+.case-form-page table.eval-sheet tr.vent-head td {
+  background: #f1f5f9;
+  font-weight: 700;
+  text-align: left;
+}
+
+.case-form-page table.eval-sheet td.muted {
+  background: #f8fafc;
+}
+
+@media (max-width: 720px) {
+  .case-form-page .grid,
+  .case-form-page .grid.cols-3,
+  .case-form-page .grid.cols-4,
+  .case-form-page .pair-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .case-form-page .span-2,
+  .case-form-page .span-all,
+  .case-form-page .pair-grid .span-2 {
+    grid-column: auto;
+  }
+}
+
+.voice-field-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-bottom: 2px;
+  min-height: 32px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.voice-field-head > span {
+  flex: 0 0 auto;
+  line-height: 1.2;
+}
+
+.voice-field-head app-voice-dictation {
+  flex: 0 1 auto;
+  display: block;
+  min-width: 0;
+}
+
+.case-form-page .reason-field textarea {
+  width: 100%;
+  min-height: 140px;
+}
+
+/* 預覽列印：隱藏填寫介面（報告顯示由 app-print-report 負責） */
+.case-form-page.printing .no-print {
+  display: none !important;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .case-form-page form.no-print,
+  .case-form-page .page-head.no-print,
+  .case-form-page .actions {
+    display: none !important;
+  }
+
+  /* 防呆：即使漏加 no-print，也不印出填寫控件 */
+  .case-form-page form input,
+  .case-form-page form select,
+  .case-form-page form textarea,
+  .case-form-page form button,
+  .case-form-page form app-time-24h,
+  .case-form-page form app-datetime-24h,
+  .case-form-page form app-voice-dictation {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+}

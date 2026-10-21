@@ -1,0 +1,36 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 p-1 sm:p-2 md:p-4">
+  @for (task of tasks; track task.id) {
+    <div
+      (click)="onCardClick(task)"
+      class="task-card group cursor-pointer bg-white rounded-xl border-2 transition-all duration-300 shadow-sm hover:shadow-xl hover:border-blue-500 active:scale-[0.99]"
+      [ngClass]="task.urgency === 'urgent' ? 'border-red-500 shadow-red-100' : 'border-gray-200'">
+
+      <div class="p-3 sm:p-4 border-b flex justify-between items-center gap-2 bg-gray-50/50">
+        <span class="px-3 py-1 rounded-full text-xs font-bold shrink-0"
+              [ngClass]="task.urgency === 'urgent' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'">
+          {{ task.urgency === 'urgent' ? '⚠️ 緊急' : '一般' }}
+        </span>
+        <span class="text-xs font-semibold text-right"
+              [ngClass]="task.status === 'in-progress' ? 'text-orange-600' : (task.status === 'pending' ? 'text-gray-500' : 'text-green-600')">
+          {{ task.status === 'in-progress' ? '🚚 轉送中' : (task.status === 'pending' ? '🕒 待出發' : '✅ 已抵達') }}
+        </span>
+      </div>
+
+      <div class="p-4 sm:p-5">
+        <h3 class="text-base sm:text-lg font-black text-gray-800 mb-2 group-hover:text-blue-600 transition-colors break-words">
+          {{ task.patientName }}
+        </h3>
+        <div class="space-y-1 text-sm text-gray-600">
+          <p><strong>醫師:</strong> {{ task.doctor }}</p>
+          <p class="line-clamp-2"><strong>原因:</strong> {{ task.reason }}</p>
+          <p class="text-blue-500 underline decoration-blue-200 break-words"><strong>院所:</strong> {{ task.hospital }}</p>
+        </div>
+      </div>
+
+      <div class="px-4 sm:px-5 py-3 bg-gray-50 text-[10px] text-gray-400 border-t flex justify-between gap-2">
+        <span class="truncate">ID: {{ task.id }}</span>
+        <span class="shrink-0">更新於: {{ task.lastUpdated | date:'MM/dd HH:mm' }}</span>
+      </div>
+    </div>
+  }
+</div>

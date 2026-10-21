@@ -1,0 +1,131 @@
+<div class="list-page">
+  <div class="list-head">
+    <div>
+      <h1>轉診清單總表</h1>
+      <p>
+        資料來源：本機 MongoDB <code>CC_DB.transfers</code>
+        @if (mongoOk() === true) { <span class="ok">● 已連線</span> }
+        @if (mongoOk() === false) { <span class="bad">● 連線異常</span> }
+      </p>
+    </div>
+    <div class="head-actions">
+      <button type="button" class="ghost" (click)="reload()" [disabled]="loading()">重新載入</button>
+      @if (auth.can('transfers.edit')) {
+        <button type="button" class="primary" (click)="createNew()" [disabled]="creating()">＋ 新增外接登錄</button>
+      }
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="banner bad">{{ error() }}</p>
+  }
+  @if (loading()) {
+    <p class="banner">載入中…</p>
+  }
+
+  <div class="toolbar">
+    <label class="search">
+      <span>查詢</span>
+      <input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        (keyup.enter)="reload()"
+        placeholder="序號／院所／醫師／原因"
+      />
+    </label>
+    <label>
+      <span>顯示筆數</span>
+      <select
+        [ngModel]="pageSize()"
+        (ngModelChange)="pageSize.set(+$event); reload()"
+      >
+        @for (n of pageSizeOptions; track n) {
+          <option [ngValue]="n">{{ n }}</option>
+        }
+      </select>
+    </label>
+    <p class="count">目前顯示 {{ filtered().length }} 筆</p>
+  </div>
+
+  <div class="table-wrap">
+    <table class="case-table">
+      <thead>
+        <tr>
+          <th>序號</th>
+          <th>來電日期時間</th>
+          <th>來電院所</th>
+          <th>轉院原因</th>
+          <th>指定醫師</th>
+          <th>床位</th>
+          <th>外接狀態</th>
+          <th>24h 回覆</th>
+          @if (auth.can('transfers.delete')) {
+            <th class="actions-col">操作</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of filtered(); track c.id) {
+          <tr
+            class="row"
+            [class.no-transfer]="!transferred(c)"
+            [class.active]="c.id === activeId()"
+            (click)="openCase(c)"
+            (keydown.enter)="openCase(c)"
+            tabindex="0"
+            role="button"
+          >
+            <td class="serial">{{ c.serial }}</td>
+            <td class="nowrap">{{ c.callDate }} {{ c.callTime }}</td>
+            <td>{{ c.hospitalName || '—' }}</td>
+            <td class="reason">{{ c.transferReason || '—' }}</td>
+            <td>{{ c.assignedDoctor || '—' }}</td>
+            <td>{{ c.preBedSlots.join('、') || '—' }}</td>
+            <td>
+              <span class="status" [class.ok]="transferred(c)" [class.warn]="!transferred(c)">
+                {{ transferred(c) ? '有外接' : labelReason(c) }}
+              </span>
+            </td>
+            <td>{{ c.doctorReply24h === 'yes' ? '是' : c.doctorReply24h === 'no' ? '否' : '—' }}</td>
+            @if (auth.can('transfers.delete')) {
+              <td class="actions-col" (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  class="delete-btn"
+                  title="刪除此筆轉診紀錄"
+                  [disabled]="deletingId() === c.id"
+                  (click)="askDelete(c, $event)"
+                >
+                  {{ deletingId() === c.id ? '刪除中…' : '刪除' }}
+                </button>
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="auth.can('transfers.delete') ? 9 : 8" class="empty">沒有符合的轉診紀錄</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (pendingDelete(); as del) {
+    <div class="confirm-backdrop" (click)="cancelDelete()" role="presentation"></div>
+    <div class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="del-title" aria-describedby="del-desc">
+      <h2 id="del-title">確認刪除？</h2>
+      <p id="del-desc">
+        即將刪除轉診紀錄 <strong>{{ del.serial }}</strong>
+        （{{ del.hospitalName || '未填院所' }}）。
+        <br />此動作無法復原，相關表單資料都會一併刪除。
+      </p>
+      <div class="confirm-actions">
+        <button type="button" class="ghost" (click)="cancelDelete()" [disabled]="!!deletingId()">取消</button>
+        <button type="button" class="danger" (click)="confirmDelete()" [disabled]="!!deletingId()">
+          {{ deletingId() === del.id ? '刪除中…' : '確定刪除' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,17 @@
+[Unit]
+Description=NTMS Medical transfer stack (backend + gateway)
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=nemo
+WorkingDirectory=/home/nemo/medical-system
+Environment=SKIP_NGROK=1
+Environment=LAN_IP=192.168.50.2
+Environment=ROOT=/home/nemo/medical-system
+ExecStart=/home/nemo/medical-system/scripts/start_medical.sh prod --no-build
+ExecStop=/home/nemo/medical-system/scripts/start_medical.sh stop
+
+[Install]
+WantedBy=multi-user.target

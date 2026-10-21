@@ -1,0 +1,296 @@
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+server {
+    listen 80;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen       8443 ssl;
+    client_max_body_size 500M;
+    server_name  localhost;
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-Content-Type-Options nosniff;
+    add_header Cache-Control no-cache;
+    add_header Cache-Control private;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload";
+    ssl_certificate /etc/nginx/cert/certificate.crt.pem;
+    ssl_certificate_key /etc/nginx/cert/privateKey.key.pem;
+    ssl_protocols       TLSv1.2;
+    ssl_ciphers       ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:!aNULL:!eNULL:!EXPORT:!DES:!3DES:!CAMELLIA:!SEED:!RC4:!ADH:!MD5:!PSK:!aECDH:!KRB5-DES-CBC3-SHA;
+
+    if ($request_method !~* GET|HEAD|POST|DELETE|PUT) {
+        return 403;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+    }
+
+    location /fhir/ {
+        proxy_pass http://127.0.0.1:8080/fhir/swagger-ui/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+    }
+}
+
+server {
+    listen       443 ssl;
+    client_max_body_size 200M;
+    server_name  localhost;
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-Content-Type-Options nosniff;
+    add_header Cache-Control no-cache;
+    add_header Cache-Control private;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload";
+    add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.mouseflow.com https://cdn.jsdelivr.net https://unpkg.com  https://*.firebaseio.com https://*.googleapis.com *.google.com https://*.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/ *.tile.openstreetmap.org https://*.gstatic.com https://*.googleapis.com *.google.com ; connect-src 'self' ws://*:55688/QMedicalDevice ws://*:8086/ESService ws://*:8088/QVisca ws://*:8090/QHorusscope ws://localhost:55689/QNHICard ws://localhost:24550/QX3Data ws://localhost:24550/QX3Control ws://localhost:24650/QC1Control ws://localhost:24650/QC1Data ws://*:24850/QMHAControl ws://*:24892/QCIHControl ws://*:24892/QCIHData  https://* data: wss://*.firebaseio.com;";
+    ssl_certificate /etc/nginx/cert/certificate.crt.pem;
+    ssl_certificate_key /etc/nginx/cert/privateKey.key.pem;
+    ssl_protocols       TLSv1.2;
+    ssl_ciphers       ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:!aNULL:!eNULL:!EXPORT:!DES:!3DES:!CAMELLIA:!SEED:!RC4:!ADH:!MD5:!PSK:!aECDH:!KRB5-DES-CBC3-SHA;
+
+    if ($request_method !~* GET|HEAD|POST|DELETE) {
+        return 403;
+    }
+
+# NTMS medical-system → Gateway :8091
+# Insert inside the listen 443 ssl server { ... } block (before location /).
+
+    # SPA + static (baseHref /transfer/)
+    location ^~ /transfer/ {
+        proxy_pass http://127.0.0.1:8091;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    # Medical API only（避免整站 /api 搶走既有系統）
+    location ^~ /api/transfer {
+        proxy_pass http://127.0.0.1:8091;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_http_version 1.1;
+        client_max_body_size 50M;
+        proxy_read_timeout 300s;
+    }
+
+    location ^~ /api/speech-to-text {
+        proxy_pass http://127.0.0.1:8091;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_http_version 1.1;
+        client_max_body_size 50M;
+        proxy_read_timeout 300s;
+    }
+
+    location ^~ /api/stt/ {
+        proxy_pass http://127.0.0.1:8091;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_http_version 1.1;
+    }
+
+    location = /api/ping {
+        proxy_pass http://127.0.0.1:8091;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_http_version 1.1;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:1338;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /exercise/ {
+        rewrite ^/exercise/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:55666;
+        proxy_redirect / /exercise/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /emr/ {
+        rewrite ^/emr/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:1336/;
+        proxy_redirect / /emr/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /room/ {
+        root /usr/local/room_sails/.tmp/public;
+    }
+
+    location /content/ {
+        root /usr/local/content_manager/.tmp/public;
+    }
+
+    location ^~ /orthanc/ {
+        proxy_pass https://127.0.0.1:8042;
+        proxy_set_header HOST $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        rewrite /orthanc(.*) $1 break;
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Origin' '*';
+    }
+
+    location ^~ /ohif_viewer/ {
+        root /opt/;
+        try_files $uri $uri/ /ohif_viewer/index.html;
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
+        add_header Cross-Origin-Opener-Policy same-origin;
+        add_header Cross-Origin-Embedder-Policy require-corp;
+    }
+
+    location /virtual_room_67da705319c8bd0a8663e05a/ {
+        rewrite ^/virtual_room_67da705319c8bd0a8663e05a/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:5897;
+        proxy_redirect / /virtual_room_67da705319c8bd0a8663e05a/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /virtual_room_697867f0978dd407f61b4c22/ {
+        rewrite ^/virtual_room_697867f0978dd407f61b4c22/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:5895;
+        proxy_redirect / /virtual_room_697867f0978dd407f61b4c22/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /virtual_room_67da706aa6e7c00c69478e60/ {
+        rewrite ^/virtual_room_67da706aa6e7c00c69478e60/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:5899;
+        proxy_redirect / /virtual_room_67da706aa6e7c00c69478e60/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /virtual_room_67da706aa6e7c00c69478e65/ {
+        rewrite ^/virtual_room_67da706aa6e7c00c69478e65/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:5898;
+        proxy_redirect / /virtual_room_67da706aa6e7c00c69478e65/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /virtual_room_6978683e978dd407f61b4c2e/ {
+        rewrite ^/virtual_room_6978683e978dd407f61b4c2e/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:5894;
+        proxy_redirect / /virtual_room_6978683e978dd407f61b4c2e/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /virtual_room_67da704e19c8bd0a8663e055/ {
+        rewrite ^/virtual_room_67da704e19c8bd0a8663e055/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:5900;
+        proxy_redirect / /virtual_room_67da704e19c8bd0a8663e055/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_hide_header  X-Powered-By;
+        proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+}

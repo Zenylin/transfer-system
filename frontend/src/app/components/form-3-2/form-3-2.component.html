@@ -1,0 +1,35 @@
+<form [formGroup]="form32" (ngSubmit)="onSubmit()" class="p-4 sm:p-6 bg-white border rounded-lg shadow-md max-w-5xl mx-auto">
+  <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 border-b pb-2">新生兒科外接護理紀錄交班單</h1>
+
+  <div formGroupName="basicInfo" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+    <input formControlName="dest" placeholder="外接目的地" class="border p-2.5 rounded w-full min-w-0">
+    <input formControlName="phone" placeholder="聯絡電話" class="border p-2.5 rounded w-full min-w-0" inputmode="tel">
+    <input type="date" formControlName="date" class="border p-2.5 rounded w-full min-w-0 sm:col-span-2 lg:col-span-1">
+  </div>
+
+  <div formGroupName="caseInfo" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 p-3 sm:p-4 bg-gray-50 rounded">
+    <input type="number" formControlName="G" placeholder="G" class="border p-2.5 rounded w-full min-w-0" inputmode="numeric" min="0" step="1">
+    <input type="number" formControlName="P" placeholder="P" class="border p-2.5 rounded w-full min-w-0" inputmode="numeric" min="0" step="1">
+    <select formControlName="mode" class="border p-2.5 rounded w-full min-w-0 bg-white">
+      <option value="CS">C/S</option>
+      <option value="NS">NSD</option>
+    </select>
+    <input type="number" formControlName="birthWeight" placeholder="出生體重(g)" class="border p-2.5 rounded w-full min-w-0" inputmode="numeric" min="0" step="1">
+  </div>
+
+  <div formGroupName="medicalInfo" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mb-6">
+    <input type="number" formControlName="arrivalBt" placeholder="BT(°C)" class="border p-2.5 rounded w-full min-w-0" inputmode="decimal" step="0.1">
+    <input formControlName="arrivalBp" placeholder="BP(mmHg)" class="border p-2.5 rounded w-full min-w-0">
+    <input type="number" formControlName="arrivalHr" placeholder="HR(bpm)" class="border p-2.5 rounded w-full min-w-0" inputmode="numeric" min="0" step="1">
+    <input type="number" formControlName="arrivalRr" placeholder="RR(bpm)" class="border p-2.5 rounded w-full min-w-0" inputmode="numeric" min="0" step="1">
+    <input type="number" formControlName="arrivalSpo2" placeholder="SpO2(%)" class="border p-2.5 rounded w-full min-w-0 col-span-2 sm:col-span-1" inputmode="numeric" min="0" max="100" step="1">
+  </div>
+
+  <div formGroupName="treatment" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
+    <label class="inline-flex items-center gap-2 min-h-[44px]"><input type="checkbox" formControlName="vitK" class="w-4 h-4"> Vitamin K1</label>
+    <label class="inline-flex items-center gap-2 min-h-[44px]"><input type="checkbox" formControlName="eyeDrop" class="w-4 h-4"> 眼藥</label>
+    <input formControlName="antibioticType" placeholder="類固醇/抗生素類別" class="border p-2.5 rounded w-full sm:col-span-2">
+  </div>
+
+  <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-lg hover:bg-blue-700 font-semibold min-h-[48px]">完成紀錄儲存</button>
+</form>

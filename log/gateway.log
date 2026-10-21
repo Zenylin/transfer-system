@@ -1,0 +1,1 @@
+🌉 Medical Gateway PROD http://0.0.0.0:8091  ( static=/home/nemo/medical-system/frontend/dist/frontend/browser, /api -> https://:3000 )

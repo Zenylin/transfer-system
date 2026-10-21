@@ -1,0 +1,21 @@
+<div class="login-page">
+  <div class="login-panel">
+    <p class="brand">NTMS</p>
+    <h1>新生兒轉診系統</h1>
+    <p class="sub">一般使用者填寫姓名即可進入</p>
+
+    <form (ngSubmit)="submit()" class="login-form">
+      <label>
+        <span>姓名</span>
+        <input [(ngModel)]="username" name="username" autocomplete="username" required />
+      </label>
+      <label>
+        <span>密碼（一般使用者可留白）</span>
+        <input [(ngModel)]="password" name="password" type="password" autocomplete="current-password" />
+      </label>
+      <p class="hint">管理員請輸入帳號與密碼。預設管理員：admin ／ admin123。</p>
+      <p class="error" *ngIf="error">{{ error }}</p>
+      <button type="submit" [disabled]="submitting">{{ submitting ? '登入中…' : '登入' }}</button>
+    </form>
+  </div>
+</div>

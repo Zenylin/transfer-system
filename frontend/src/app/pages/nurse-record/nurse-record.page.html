@@ -1,0 +1,259 @@
+<div class="case-form-page" [class.printing]="printing">
+  <div class="page-head no-print">
+    <div>
+      <h1>轉診紀錄單（護理師）</h1>
+      <p class="meta">{{ serial }}　{{ hospital }}　<span class="chip ok">現場檢查不含 6、7</span></p>
+    </div>
+    <a [routerLink]="['/cases', caseId, 'doctor']">← 醫師單</a>
+  </div>
+
+  @if (printing) {
+    <app-print-report
+      title="轉診紀錄單（護理師）（統計報告）"
+      [meta]="'序號 ' + serial + '　' + hospital + '　列印時間 ' + printAt"
+      [sections]="printSections"
+    ></app-print-report>
+  }
+
+  <form class="no-print" [formGroup]="form" (ngSubmit)="save()">
+    <section>
+      <h2>二、（五）其他</h2>
+      <label class="field"><textarea formControlName="otherNote" rows="3" placeholder="自由填寫" [attr.maxlength]="LEN.note"></textarea></label>
+    </section>
+
+    <section>
+      <h2>三、（一）救護車時間　（二）抵達後生命徵象</h2>
+      <div class="grid cols-3">
+        <label class="field">出車日期<input type="date" formControlName="departDate" [max]="todayMax" /></label>
+        <label class="field">出車時間<app-time-24h formControlName="departTime"></app-time-24h></label>
+        <label class="field">到達外院時間<app-time-24h formControlName="arriveOutsideTime"></app-time-24h></label>
+        <label class="field">BT 種類
+          <select formControlName="arriveBtType">
+            <option value="">—</option>
+            <option value="肛溫">肛溫</option>
+            <option value="腋溫">腋溫</option>
+          </select>
+        </label>
+        <label class="field">BT ℃（32–42）
+          <input type="number" formControlName="arriveBt" [min]="NUM.arriveBt.min" [max]="NUM.arriveBt.max" [step]="NUM.arriveBt.step" />
+        </label>
+        <label class="field">HR（30–200）
+          <input type="number" formControlName="arriveHr" [min]="NUM.arriveHr.min" [max]="NUM.arriveHr.max" [step]="NUM.arriveHr.step" />
+        </label>
+        <label class="field">RR（10–70）
+          <input type="number" formControlName="arriveRr" [min]="NUM.arriveRr.min" [max]="NUM.arriveRr.max" [step]="NUM.arriveRr.step" />
+        </label>
+        <label class="field">SpO2 %（60–100）
+          <input type="number" formControlName="arriveSpo2" [min]="NUM.arriveSpo2.min" [max]="NUM.arriveSpo2.max" [step]="NUM.arriveSpo2.step" />
+        </label>
+        <label class="field">BP mmHg<input type="text" formControlName="arriveBp" placeholder="例 60/40" maxlength="7" /></label>
+      </div>
+    </section>
+
+    <section [class.gi-from-history]="giLockedFromHistory">
+      <h2>三、（三）主要處置｜2.腸胃系統</h2>
+      @if (giLockedFromHistory) {
+        <p class="note">※ 已帶入病史表資料，僅「備註」可修改</p>
+      }
+      <div class="option-row">
+        <span class="option-label">NPO</span>
+        <div class="option-choices">
+          <label><input type="checkbox" formControlName="npo" /> 是</label>
+        </div>
+      </div>
+      <div class="pair-grid" style="margin-top:10px">
+        <label class="field">每餐 ml（1–300）
+          <input type="number" formControlName="feedMl" [min]="NUM.feedMl.min" [max]="NUM.feedMl.max" [step]="NUM.feedMl.step" />
+        </label>
+        <label class="field">每＿小時（1–8）
+          <input type="number" formControlName="feedEveryHr" [min]="NUM.feedEveryHr.min" [max]="NUM.feedEveryHr.max" [step]="NUM.feedEveryHr.step" />
+        </label>
+        <label class="field">血糖
+          <select formControlName="glucoseMode">
+            <option value="">—</option>
+            <option value="none">無測量</option>
+            <option value="value">有數值</option>
+          </select>
+        </label>
+        <label class="field">血糖數值（0–500）
+          <input type="number" formControlName="glucoseValue" [min]="NUM.glucose.min" [max]="NUM.glucose.max" [step]="NUM.glucose.step" />
+        </label>
+        <div class="field">
+          <span>胃管</span>
+          <div class="option-choices" style="min-height:42px">
+            <label><input type="checkbox" formControlName="ogTube" /> 有</label>
+          </div>
+        </div>
+        <label class="field">胃管號
+          <select formControlName="ogSize"><option value="">—</option><option>5</option><option>6</option><option>8</option></select>
+        </label>
+        <label class="field">黑點前公分（1–8）
+          <input type="number" formControlName="ogCm" [min]="NUM.ogCm.min" [max]="NUM.ogCm.max" [step]="NUM.ogCm.step" />
+        </label>
+        <label class="field span-2">備註
+          <textarea formControlName="giNote" [attr.maxlength]="LEN.note"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section [class.gi-from-history]="labsLockedFromHistory">
+      <h2>3.抽血及用藥　4.外觀　5.其他</h2>
+      @if (labsLockedFromHistory) {
+        <p class="note">※ 抽血／用藥已帶入病史表資料，不可修改（外觀／其他仍可填）</p>
+      }
+      <div class="grid cols-3">
+        <label class="field">抽血
+          <select formControlName="labs">
+            <option value="">—</option>
+            <option value="yes">有</option>
+            <option value="no">無</option>
+            <option value="doc">外院附文件</option>
+          </select>
+        </label>
+        <label class="field span-2">數值<input type="text" formControlName="labsValue" [attr.maxlength]="LEN.labsValue" /></label>
+        <label class="field">K1
+          <select formControlName="vitK"><option value="">—</option><option value="yes">已給予</option><option value="no">未給予</option></select>
+        </label>
+        <label class="field">眼藥
+          <select formControlName="eyeDrop"><option value="">—</option><option value="yes">已給予</option><option value="no">未給予</option></select>
+        </label>
+        <label class="field">使用藥物
+          <select formControlName="otherDrugs"><option value="">—</option><option value="yes">有</option><option value="no">無</option></select>
+        </label>
+        <label class="field span-all">藥物種類<input type="text" formControlName="otherDrugsType" [attr.maxlength]="LEN.drugs" /></label>
+      </div>
+      <p class="note" style="margin-top:10px">抗生素</p>
+      <div class="checks">
+        @for (a of ['Ampicillin','Gentamycin','Metronidazole','Fortum','claforan','vancomycin','Amikacin','其他']; track a) {
+          <label>
+            <input type="checkbox" [checked]="has('antibiotics', a)" (change)="toggle('antibiotics', a, $any($event.target).checked)" [disabled]="labsLockedFromHistory" />
+            {{ a }}
+          </label>
+        }
+      </div>
+      <p class="note" style="margin-top:12px">外觀</p>
+      <label class="checks"><input type="checkbox" formControlName="noAbnormal" /> 無異常</label>
+      <div class="checks">
+        @for (a of ['頭血腫','產瘤','尿道下裂','無肛','唇裂','顎裂','蒙古斑','藍斑','紅痕']; track a) {
+          <label>
+            <input type="checkbox" [checked]="has('appearance', a)" (change)="toggle('appearance', a, $any($event.target).checked)" />
+            {{ a }}
+          </label>
+        }
+      </div>
+      <label class="field" style="margin-top:10px">外觀其他／主要處置其他
+        <input type="text" formControlName="appearanceOther" placeholder="外觀其他" [attr.maxlength]="LEN.shortText" />
+        <textarea formControlName="treatmentOther" rows="2" placeholder="5.其他" style="margin-top:8px" [attr.maxlength]="LEN.note"></textarea>
+      </label>
+    </section>
+
+    <section>
+      <h2>三、（四）護理師現場交班檢查（1–5）</h2>
+      <div class="grid">
+        <label class="field">母親身分證字號
+          <input type="text" formControlName="momIdNo" maxlength="10" placeholder="A123456789" style="text-transform:uppercase" />
+        </label>
+        <label class="field">母親生日<input type="date" formControlName="momBirthday" [max]="todayMax" /></label>
+      </div>
+      <div class="checks" style="margin-top:8px">
+        <label><input type="checkbox" formControlName="chkReferralForm" /> 轉診單</label>
+        <label><input type="checkbox" formControlName="chkConsent" /> 轉運同意書</label>
+        <label><input type="checkbox" formControlName="chkChildBook" /> 健兒手冊</label>
+        <label><input type="checkbox" formControlName="chkAmbulanceReceipt" /> 救護車收款證明單(粉紅單)</label>
+      </div>
+      <div class="grid cols-4" style="margin-top:10px">
+        <label class="field">HBV
+          <select formControlName="hbvStatus">
+            <option value="">—</option>
+            <option value="未完成">未完成</option>
+            <option value="已完成加以蓋章">已完成加以蓋章</option>
+          </select>
+        </label>
+        <label class="field">HBIG
+          <select formControlName="hbigStatus">
+            <option value="">—</option>
+            <option value="未完成">未完成</option>
+            <option value="已完成加以蓋章">已完成加以蓋章</option>
+          </select>
+        </label>
+        <label class="field">新生兒篩檢
+          <select formControlName="nbsStatus">
+            <option value="">—</option>
+            <option value="未完成">未完成</option>
+            <option value="已完成加以蓋章">已完成加以蓋章</option>
+          </select>
+        </label>
+        <label class="field">聽力篩檢
+          <select formControlName="hearingStatus">
+            <option value="">—</option>
+            <option value="未完成">未完成</option>
+            <option value="已完成加以蓋章">已完成加以蓋章</option>
+          </select>
+        </label>
+      </div>
+      <p class="note">已依規格移除第 6、7 項（申請表／派車單）。</p>
+    </section>
+
+    <section>
+      <h2>五、（一）外接車溫度　（二）轉接過程評估</h2>
+      <div class="grid">
+        <label class="field">皮膚感應溫度 ℃（32–42）
+          <input type="number" formControlName="skinSensorTemp" [min]="NUM.skinTemp.min" [max]="NUM.skinTemp.max" [step]="NUM.skinTemp.step" (change)="onSkinTemp()" />
+        </label>
+        <label class="field" style="justify-content:flex-end">
+          <span class="option-choices" style="min-height:42px">
+            <label style="font-weight:500"><input type="checkbox" formControlName="therapeuticHypothermia" /> 啟動低溫治療</label>
+          </span>
+        </label>
+        <label class="field span-2">轉接過程個案狀況評估備註
+          <textarea formControlName="evalNote" rows="3" [attr.maxlength]="LEN.note"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>五、（四）救護車時間個案交接狀況</h2>
+      <div class="grid">
+        <label class="field">返院出發時間
+          <app-datetime-24h formControlName="returnDepartAt" [max]="nowMax"></app-datetime-24h>
+        </label>
+        <label class="field">返院回到長庚病房時間
+          <app-time-24h formControlName="returnArriveWardAt"></app-time-24h>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>入院後生命徵象</h2>
+      <div class="grid cols-3">
+        <label class="field">BT 種類
+          <select formControlName="admitBtType">
+            <option value="">—</option>
+            <option value="肛溫">肛溫</option>
+            <option value="腋溫">腋溫</option>
+          </select>
+        </label>
+        <label class="field">BT ℃<input type="number" formControlName="admitBt" [min]="NUM.bt.min" [max]="NUM.bt.max" [step]="NUM.bt.step" /></label>
+        <label class="field">HR 次/分<input type="number" formControlName="admitHr" [min]="NUM.hr.min" [max]="NUM.hr.max" [step]="NUM.hr.step" /></label>
+        <label class="field">RR 次/分<input type="number" formControlName="admitRr" [min]="NUM.rr.min" [max]="NUM.rr.max" [step]="NUM.rr.step" /></label>
+        <label class="field">SpO2 %<input type="number" formControlName="admitSpo2" [min]="NUM.spo2.min" [max]="NUM.spo2.max" [step]="NUM.spo2.step" /></label>
+        <label class="field">BP mmHg<input type="text" formControlName="admitBp" placeholder="例 65/40" maxlength="7" /></label>
+      </div>
+    </section>
+
+    <section>
+      <h2>簽名</h2>
+      <div class="grid">
+        <label class="field">隨車護理師<input type="text" formControlName="escortNurseSignature" [attr.maxlength]="LEN.signature" /></label>
+        <label class="field">交班護理師<input type="text" formControlName="handoverNurseSignature" [attr.maxlength]="LEN.signature" /></label>
+      </div>
+    </section>
+
+    <p class="note" *ngIf="savedMsg">{{ savedMsg }}</p>
+    <div class="actions">
+      <button type="submit" class="primary">暫存</button>
+      <button type="button" class="primary" (click)="previewPrint()">預覽列印</button>
+      <a routerLink="/" style="display:inline-flex;align-items:center;text-decoration:none;border:1px solid #cbd5e1;border-radius:12px;padding:0 18px;min-height:46px;font-weight:700;color:#334155;background:#fff">回總表</a>
+    </div>
+  </form>
+</div>

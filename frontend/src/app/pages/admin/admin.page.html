@@ -1,0 +1,332 @@
+<div class="admin-page">
+  <header class="admin-head">
+    <div>
+      <h1>後台管理</h1>
+      <p>管理帳號、權限，以及轉診數量統計。</p>
+    </div>
+    <div class="tabs" role="tablist">
+      @if (canManage()) {
+        <button type="button" role="tab" [class.on]="tab() === 'accounts'" (click)="showTab('accounts')">
+          帳號與權限
+        </button>
+      }
+      @if (canStats()) {
+        <button type="button" role="tab" [class.on]="tab() === 'stats'" (click)="showTab('stats')">
+          統計圖表
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="banner bad">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="banner ok">{{ notice() }}</p>
+  }
+
+  @if (tab() === 'accounts' && canManage()) {
+    <section class="panel">
+      <div class="panel-head">
+        <h2>帳號</h2>
+        <button type="button" class="primary" (click)="openCreate()">＋ 新增帳號</button>
+      </div>
+      @if (loadingUsers()) {
+        <p class="muted">載入中…</p>
+      }
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>帳號</th>
+              <th>姓名</th>
+              <th>角色</th>
+              <th>狀態</th>
+              <th>權限</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users(); track user.id) {
+              <tr [class.self]="user.id === auth.user()?.id">
+                <td class="mono">{{ user.username }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.roleLabel || roleName(user.role) }}</td>
+                <td>
+                  <span class="pill" [class.off]="!user.active">{{ user.active ? '啟用' : '停用' }}</span>
+                </td>
+                <td class="perms">{{ permSummary(user) }}</td>
+                <td class="row-actions">
+                  <button type="button" class="ghost" (click)="openEdit(user)">修改</button>
+                  <button
+                    type="button"
+                    class="danger"
+                    [disabled]="user.id === auth.user()?.id"
+                    (click)="askDelete(user)"
+                  >
+                    刪除
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="muted">尚無帳號</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    @if (editor; as draft) {
+      <section class="panel editor">
+        <div class="panel-head">
+          <h2>{{ draft.id ? '修改帳號' : '新增帳號' }}</h2>
+          <button type="button" class="ghost" (click)="closeEditor()">關閉</button>
+        </div>
+        <form class="editor-grid" (ngSubmit)="saveEditor()">
+          <label>
+            <span>帳號</span>
+            <input [(ngModel)]="draft.username" name="username" autocomplete="off" required />
+          </label>
+          <label>
+            <span>姓名</span>
+            <input [(ngModel)]="draft.name" name="name" autocomplete="name" required />
+          </label>
+          <label>
+            <span>{{ draft.id ? '新密碼（留白表示不改）' : '密碼' }}</span>
+            <input [(ngModel)]="draft.password" name="password" type="password" autocomplete="new-password" />
+          </label>
+          <label>
+            <span>確認密碼</span>
+            <input [(ngModel)]="confirmPassword" name="confirm" type="password" autocomplete="new-password" />
+          </label>
+          <label>
+            <span>角色</span>
+            <select [ngModel]="draft.role" (ngModelChange)="onRoleChange($event)" name="role">
+              @for (role of roles; track role.key) {
+                <option [value]="role.key">{{ role.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="check">
+            <input type="checkbox" [(ngModel)]="draft.active" name="active" [disabled]="draft.id === auth.user()?.id" />
+            <span>啟用此帳號</span>
+          </label>
+
+          <div class="perm-block">
+            <p class="perm-title">權限</p>
+            <p class="muted">變更角色會套用該角色的預設權限，管理員擁有全部權限。</p>
+            @for (group of permGroups(); track group.group) {
+              <fieldset [disabled]="draft.role === 'admin'">
+                <legend>{{ group.group }}</legend>
+                @for (item of group.items; track item.key) {
+                  <label class="check">
+                    <input
+                      type="checkbox"
+                      [checked]="hasPerm(item.key)"
+                      (change)="togglePerm(item.key, $any($event.target).checked)"
+                    />
+                    <span>{{ item.label }}</span>
+                  </label>
+                }
+              </fieldset>
+            }
+          </div>
+
+          <div class="editor-actions">
+            <button type="submit" class="primary" [disabled]="saving()">
+              {{ saving() ? '儲存中…' : '儲存' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    }
+  }
+
+  @if (tab() === 'stats' && canStats()) {
+    <section class="stats-toolbar">
+      <label>
+        <span>統計區間</span>
+        <select [ngModel]="year()" (ngModelChange)="onYearChange($event)">
+          <option value="all">全部期間</option>
+          @for (y of stats()?.years || []; track y) {
+            <option [value]="y">{{ y }} 年</option>
+          }
+        </select>
+      </label>
+      <button type="button" class="ghost" (click)="loadStats()" [disabled]="loadingStats()">重新整理</button>
+    </section>
+
+    @if (loadingStats() && !stats()) {
+      <p class="muted">統計載入中…</p>
+    }
+
+    @if (stats(); as data) {
+      <section class="kpis">
+        <article>
+          <p>總轉診數量</p>
+          <strong>{{ data.totals.all }}</strong>
+          <span>全期間累計</span>
+        </article>
+        <article>
+          <p>{{ data.year === 'all' ? '全部期間' : data.year + ' 年' }}</p>
+          <strong>{{ data.range.total }}</strong>
+          <span>此區間筆數</span>
+        </article>
+        <article>
+          <p>有外接</p>
+          <strong>{{ data.range.transferred }}</strong>
+          <span>外接率 {{ data.range.rate }}%</span>
+        </article>
+        <article>
+          <p>未外接</p>
+          <strong>{{ data.range.notTransferred }}</strong>
+          <span>含滿床、空床不足、自行抱來</span>
+        </article>
+        <article>
+          <p>24 小時已回覆</p>
+          <strong>{{ data.range.replyYes }}</strong>
+          <span>未回覆 {{ data.range.replyNo }} · 未填 {{ data.range.replyEmpty }}</span>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>每月轉診數量</h2>
+          <div class="legend">
+            <span><i class="swatch yes"></i>有外接</span>
+            <span><i class="swatch no"></i>未外接</span>
+          </div>
+        </div>
+        @if (!data.monthly.length) {
+          <p class="muted">此區間沒有可繪製的月份資料。</p>
+        } @else {
+          <div class="chart" role="img" aria-label="每月轉診數量長條圖">
+            @for (month of data.monthly; track month.key) {
+              <div class="bar-col" [attr.title]="month.label + '：' + month.total + ' 筆'">
+                <span class="bar-value">{{ month.total || '' }}</span>
+                <div class="bar-track">
+                  <div class="bar" [style.height.%]="barHeight(month.total)">
+                    <div class="seg no" [style.flex]="month.notTransferred"></div>
+                    <div class="seg yes" [style.flex]="month.transferred"></div>
+                  </div>
+                </div>
+                <span class="bar-label">{{ month.label }}</span>
+              </div>
+            }
+          </div>
+          <div class="table-wrap slim">
+            <table>
+              <thead>
+                <tr>
+                  <th>月份</th>
+                  <th>總數</th>
+                  <th>有外接</th>
+                  <th>未外接</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (month of data.monthly; track month.key) {
+                  <tr>
+                    <td>{{ month.label }}</td>
+                    <td>{{ month.total }}</td>
+                    <td>{{ month.transferred }}</td>
+                    <td>{{ month.notTransferred }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <section class="split">
+        <article class="panel">
+          <h2>外接占比</h2>
+          <div class="donut-row">
+            <div class="donut" [style.background]="donutStyle()">
+              <div class="donut-hole">
+                <strong>{{ data.range.rate }}%</strong>
+                <span>外接率</span>
+              </div>
+            </div>
+            <ul class="legend-list">
+              <li><i class="swatch yes"></i>有外接 {{ data.range.transferred }}</li>
+              <li><i class="swatch no"></i>未外接 {{ data.range.notTransferred }}</li>
+              @if (data.totals.undated) {
+                <li>未填來電日期 {{ data.totals.undated }}（不計入月份圖）</li>
+              }
+            </ul>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>未外接原因</h2>
+          @if (!data.reasons.length) {
+            <p class="muted">此區間沒有未外接紀錄。</p>
+          }
+          @for (item of data.reasons; track item.key) {
+            <div class="hrow">
+              <span>{{ item.label }}</span>
+              <div class="htrack">
+                <div class="hfill no" [style.width.%]="share(item.count, reasonMax())"></div>
+              </div>
+              <strong>{{ item.count }}</strong>
+            </div>
+          }
+        </article>
+      </section>
+
+      <section class="split">
+        <article class="panel">
+          <h2>來電院所（前 8 名）</h2>
+          @if (!data.hospitals.length) {
+            <p class="muted">尚無院所資料。</p>
+          }
+          @for (item of data.hospitals; track item.name) {
+            <div class="hrow">
+              <span>{{ item.name }}</span>
+              <div class="htrack">
+                <div class="hfill yes" [style.width.%]="share(item.count, hospitalMax())"></div>
+              </div>
+              <strong>{{ item.count }}</strong>
+            </div>
+          }
+        </article>
+
+        <article class="panel">
+          <h2>預入床位</h2>
+          @if (!data.beds.length) {
+            <p class="muted">尚無床位資料。</p>
+          }
+          @for (item of data.beds; track item.name) {
+            <div class="hrow">
+              <span>{{ item.name }}</span>
+              <div class="htrack">
+                <div class="hfill bed" [style.width.%]="share(item.count, bedMax())"></div>
+              </div>
+              <strong>{{ item.count }}</strong>
+            </div>
+          }
+        </article>
+      </section>
+    }
+  }
+
+  @if (pendingDelete; as del) {
+    <div class="confirm-backdrop" (click)="cancelDelete()"></div>
+    <div class="confirm-dialog" role="alertdialog" aria-modal="true">
+      <h2>確認刪除帳號？</h2>
+      <p>
+        即將刪除 <strong>{{ del.name }}</strong>（{{ del.username }}）。此動作無法復原。
+      </p>
+      <div class="editor-actions">
+        <button type="button" class="ghost" (click)="cancelDelete()" [disabled]="saving()">取消</button>
+        <button type="button" class="danger" (click)="confirmDelete()" [disabled]="saving()">
+          {{ saving() ? '刪除中…' : '確定刪除' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

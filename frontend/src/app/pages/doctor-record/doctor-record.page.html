@@ -1,0 +1,201 @@
+<div class="case-form-page" [class.printing]="printing">
+  <div class="page-head no-print">
+    <div>
+      <h1>轉診紀錄單（醫師）</h1>
+      <p class="meta">{{ serial }}　{{ hospital }}　<span class="chip ok">可預覽列印</span></p>
+    </div>
+    <a [routerLink]="['/cases', caseId, 'history']">← 孕產史</a>
+  </div>
+
+  @if (printing) {
+    <app-print-report
+      title="轉診紀錄單（醫師）（統計報告）"
+      [meta]="'序號 ' + serial + '　' + hospital + '　列印時間 ' + printAt"
+      [sections]="printSections"
+    ></app-print-report>
+  }
+
+  <form class="no-print" [formGroup]="form" (ngSubmit)="save()">
+    <section>
+      <h2>三、（三）主要處置｜1.呼吸系統</h2>
+      @if (respFromHistory) {
+        <p class="note">※ 已帶入病史表資料，可修改（不回寫病史表）</p>
+      } @else {
+        <p class="note">若病史表已填呼吸系統，開啟本頁會自動帶入；此處可自由修改，不回寫。</p>
+      }
+      <label class="checks"><input type="checkbox" formControlName="noRespProblem" /> 無呼吸問題（ROOM AIR）</label>
+      <div class="checks" style="margin-top:8px">
+        @for (s of ['血氧不穩','胸肋凹','鼻翼搧動','呼吸陣喘','呻吟聲']; track s) {
+          <label>
+            <input type="checkbox" [checked]="has('respSymptoms', s)" (change)="toggle('respSymptoms', s, $any($event.target).checked)" />
+            {{ s }}
+          </label>
+        }
+      </div>
+      <div class="pair-grid" style="margin-top:10px">
+        <label class="field">O2 Hood L/min（35–60／5）
+          <input type="number" formControlName="o2HoodLpm" [min]="NUM.o2HoodLpm.min" [max]="NUM.o2HoodLpm.max" [step]="NUM.o2HoodLpm.step" />
+        </label>
+        <label class="field">O2 Cannula L/min（1–10）
+          <input type="number" formControlName="o2CannulaLpm" [min]="NUM.o2CannulaLpm.min" [max]="NUM.o2CannulaLpm.max" [step]="NUM.o2CannulaLpm.step" />
+        </label>
+        <label class="field">N-CPAP FiO2 %（21–60）
+          <input type="number" formControlName="ncpapFio2" [min]="NUM.ncpapFio2.min" [max]="NUM.ncpapFio2.max" [step]="NUM.ncpapFio2.step" />
+        </label>
+        <label class="field">N-CPAP PEEP（5–10）
+          <input type="number" formControlName="ncpapPeep" [min]="NUM.ncpapPeep.min" [max]="NUM.ncpapPeep.max" [step]="NUM.ncpapPeep.step" />
+        </label>
+        <label class="field">NIMV Rate（20–50）
+          <input type="number" formControlName="nimvRate" [min]="NUM.nimvRate.min" [max]="NUM.nimvRate.max" [step]="NUM.nimvRate.step" />
+        </label>
+        <label class="field">NIMV FiO2 %（21–60）
+          <input type="number" formControlName="nimvFio2" [min]="NUM.nimvFio2.min" [max]="NUM.nimvFio2.max" [step]="NUM.nimvFio2.step" />
+        </label>
+        <label class="field">IMV Rate（20–50）
+          <input type="number" formControlName="imvRate" [min]="NUM.imvRate.min" [max]="NUM.imvRate.max" [step]="NUM.imvRate.step" />
+        </label>
+        <label class="field">IMV FiO2 %（21–100）
+          <input type="number" formControlName="imvFio2" [min]="NUM.imvFio2.min" [max]="NUM.imvFio2.max" [step]="NUM.imvFio2.step" />
+        </label>
+        <label class="field">氣管內管號
+          <select formControlName="ettSize">
+            <option value="">—</option>
+            @for (s of ['2.0','2.5','3.0','3.5','4.0']; track s) { <option [value]="s">{{ s }}</option> }
+          </select>
+        </label>
+        <label class="field">固定公分
+          <input type="number" formControlName="ettFixCm" [min]="NUM.ettFixCm.min" [max]="NUM.ettFixCm.max" [step]="NUM.ettFixCm.step" />
+        </label>
+        <label class="field span-2">現場處置
+          <textarea formControlName="respNote" rows="3" placeholder="請填寫現場處置…" [attr.maxlength]="LEN.note"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>轉接過程患嬰狀況評估【請於運送路程中每五分鐘(及需調整呼吸器時)記錄一次】</h2>
+      <div class="eval-wrap">
+        <table class="eval-sheet">
+          <thead>
+            <tr>
+              <th class="col-item">項目</th>
+              <th class="col-score">0</th>
+              <th class="col-score">1</th>
+              <th class="col-score">2</th>
+              <ng-container formArrayName="evalTimes">
+                @for (i of slotIndexes; track i) {
+                  <th class="col-slot">
+                    <div class="slot-time">
+                      <app-time-24h [compact]="true" [formControlName]="i" title="紀錄時間（24小時制）"></app-time-24h>
+                    </div>
+                  </th>
+                }
+              </ng-container>
+            </tr>
+          </thead>
+          <tbody formArrayName="evalScores">
+            @for (def of evalDefs; track def.key; let ri = $index) {
+              <tr [formGroupName]="ri">
+                <td class="col-item">{{ def.label }}</td>
+                <td class="col-score crit">{{ def.c0 }}</td>
+                <td class="col-score crit">{{ def.c1 }}</td>
+                <td class="col-score crit">{{ def.c2 }}</td>
+                @for (i of slotIndexes; track i) {
+                  <td class="col-slot">
+                    <select [formControlName]="'s' + i">
+                      <option [ngValue]="null">—</option>
+                      @for (s of scoreOpts; track s) {
+                        <option [ngValue]="s">{{ s }}</option>
+                      }
+                    </select>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+          <tbody>
+            <tr class="total-row">
+              <td class="col-item" colspan="4">總分</td>
+              @for (i of slotIndexes; track i) {
+                <td class="col-slot total">{{ totalAt(i) }}</td>
+              }
+            </tr>
+            <tr class="vent-head">
+              <td class="col-item" colspan="4">呼吸器設定（如有使用時，請紀錄之）</td>
+              @for (i of slotIndexes; track i) {
+                <td class="col-slot muted"></td>
+              }
+            </tr>
+            <tr formArrayName="ventRateFio2">
+              <td class="col-item" colspan="4">Rate(/min)／FiO2(%)</td>
+              @for (i of slotIndexes; track i) {
+                <td class="col-slot">
+                  <input type="text" [formControlName]="i" placeholder="例 40/30" />
+                </td>
+              }
+            </tr>
+            <tr formArrayName="ventPipPeep">
+              <td class="col-item" colspan="4">PIP／PEEP</td>
+              @for (i of slotIndexes; track i) {
+                <td class="col-slot">
+                  <input type="text" [formControlName]="i" placeholder="例 20/5" />
+                </td>
+              }
+            </tr>
+            <tr formArrayName="ventIeRatio">
+              <td class="col-item" colspan="4">I／E ratio</td>
+              @for (i of slotIndexes; track i) {
+                <td class="col-slot">
+                  <input type="text" [formControlName]="i" placeholder="例 1:2" />
+                </td>
+              }
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">上方時間欄為 24 小時制；各欄選 0／1／2 分，總分自動加總。</p>
+    </section>
+
+    <section>
+      <h2>轉接途中之處置</h2>
+      <div class="grid">
+        <label class="field">回程搭乘救護車人數（含司機、家屬、病患、轉運團隊）
+          <input type="number" formControlName="ambulancePeople" [min]="NUM.ambulancePeople.min" [max]="NUM.ambulancePeople.max" [step]="NUM.ambulancePeople.step" />
+        </label>
+        <label class="field">轉接途中之處置（自由填寫）
+          <textarea formControlName="enRouteManagement" rows="3" placeholder="請描述轉接途中處置…" [attr.maxlength]="LEN.note"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>五、（三）其他特殊狀況</h2>
+      <label class="checks"><input type="checkbox" formControlName="specialNone" /> 無</label>
+      <div class="checks" style="margin-top:8px">
+        @for (e of ['呼吸管路滑脫','靜脈導管滑脫','轉送中非預期插管','非預期CPCR','嚴重藥物副作用','氣體供應失效','儀器故障','人員受傷','救護車車禍']; track e) {
+          <label>
+            <input type="checkbox" [checked]="has('specialEvents', e)" (change)="toggle('specialEvents', e, $any($event.target).checked)" />
+            {{ e }}
+          </label>
+        }
+      </div>
+      <label class="field" style="margin-top:10px">其他
+        <input type="text" formControlName="specialOther" placeholder="其他特殊狀況說明" [attr.maxlength]="LEN.shortText" />
+      </label>
+    </section>
+
+    <section>
+      <h2>醫師簽名</h2>
+      <label class="field">簽名（先以姓名簽章示範）
+        <input type="text" formControlName="doctorSignature" placeholder="醫師姓名" [attr.maxlength]="LEN.signature" />
+      </label>
+    </section>
+
+    <p class="note" *ngIf="savedMsg">{{ savedMsg }}</p>
+    <div class="actions">
+      <button type="submit" class="primary">暫存</button>
+      <button type="button" class="primary" (click)="previewPrint()">預覽列印</button>
+      <a [routerLink]="['/cases', caseId, 'nurse']" class="primary" style="display:inline-flex;align-items:center;text-decoration:none;color:#fff;background:#0f766e;border-radius:12px;padding:0 18px;min-height:46px;font-weight:700">前往護理師單</a>
+    </div>
+  </form>
+</div>

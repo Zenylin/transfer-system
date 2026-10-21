@@ -1,0 +1,116 @@
+<div class="case-form-page" *ngIf="form" [class.printing]="printing">
+  <div class="page-head no-print">
+    <div>
+      <h1>外接紀錄表</h1>
+      <p class="meta">序號 {{ form.get('serial')?.value }}</p>
+    </div>
+    <a routerLink="/">← 回總表</a>
+  </div>
+
+  @if (printing) {
+    <app-print-report
+      title="外接紀錄表（統計報告）"
+      [meta]="'序號 ' + (form.get('serial')?.value || '') + '　列印時間 ' + printAt"
+      [sections]="printSections"
+    ></app-print-report>
+  }
+
+  <form class="no-print" [formGroup]="form" (ngSubmit)="save()">
+    <section>
+      <h2>來電與登錄</h2>
+      <div class="grid">
+        <label class="field">來電日期
+          <input type="date" formControlName="callDate" [max]="todayMax" />
+        </label>
+        <label class="field">來電時間
+          <app-time-24h formControlName="callTime"></app-time-24h>
+        </label>
+        <label class="field">來電院所名稱
+          <select formControlName="hospitalName">
+            <option value="">請選擇</option>
+            @for (h of hospitalOptions; track h) {
+              <option [value]="h">{{ h }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">來電院所電話
+          <input type="tel" formControlName="hospitalPhone" inputmode="tel" [attr.maxlength]="LEN.phone" placeholder="例 03-1234567" />
+        </label>
+        <div class="field span-2 reason-field">
+          <div class="voice-field-head">
+            <span>轉院原因</span>
+            <app-voice-dictation (transcribed)="onVoiceReason($event)"></app-voice-dictation>
+          </div>
+          <textarea formControlName="transferReason" rows="5" placeholder="請輸入或按住說話填入轉院原因" [attr.maxlength]="LEN.reason"></textarea>
+        </div>
+        <label class="field">登錄者
+          <input type="text" formControlName="registrar" [attr.maxlength]="LEN.signature" />
+        </label>
+        <label class="field">控床醫師
+          <input type="text" formControlName="bedControlDoctor" [attr.maxlength]="LEN.signature" />
+        </label>
+        <label class="field">指定醫師
+          <input type="text" formControlName="assignedDoctor" [attr.maxlength]="LEN.signature" />
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>外接回覆／床位</h2>
+      <p class="note">外接回覆選「無」時需再選原因；預入床位最多 2 個。</p>
+
+      <div class="option-row">
+        <span class="option-label">外接回覆</span>
+        <div class="option-choices">
+          <label>
+            <input type="radio" name="transferReply" [checked]="isTransferYes()" (change)="setTransferYes()" />
+            有
+          </label>
+          <label>
+            <input type="radio" name="transferReply" [checked]="isTransferNo()" (change)="setTransferNo()" />
+            無
+          </label>
+        </div>
+      </div>
+
+      @if (isTransferNo()) {
+        <div class="option-row sub-options">
+          <span class="option-label">無的原因</span>
+          <div class="option-choices">
+            <label><input type="radio" formControlName="noTransferReason" value="full" /> 滿床</label>
+            <label><input type="radio" formControlName="noTransferReason" value="lt3" /> 空床小於3</label>
+            <label><input type="radio" formControlName="noTransferReason" value="self" /> 自行抱來</label>
+          </div>
+        </div>
+      }
+
+      <div class="option-row">
+        <span class="option-label">醫師24小時回覆</span>
+        <div class="option-choices">
+          <label><input type="radio" formControlName="doctorReply24h" value="yes" /> 是</label>
+          <label><input type="radio" formControlName="doctorReply24h" value="no" /> 否</label>
+          <label><input type="radio" formControlName="doctorReply24h" value="" /> 未選</label>
+        </div>
+      </div>
+
+      <div class="option-row">
+        <span class="option-label">預入床位</span>
+        <div class="option-choices">
+          @for (b of bedOptions; track b) {
+            <label>
+              <input type="checkbox" [checked]="bedChecked(b)" (change)="toggleBed(b, $any($event.target).checked)" />
+              {{ b }}
+            </label>
+          }
+        </div>
+      </div>
+    </section>
+
+    <p class="note" *ngIf="savedMsg">{{ savedMsg }}</p>
+    <div class="actions">
+      <button type="submit" class="primary">暫存</button>
+      <button type="button" class="primary" (click)="previewPrint()">預覽列印</button>
+      <button type="button" class="primary" (click)="next()">暫存並前往孕產史</button>
+    </div>
+  </form>
+</div>
